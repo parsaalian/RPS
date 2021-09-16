@@ -1,17 +1,18 @@
 import pandas as pd
 
 
-def SP500_loader(filename, start_date=None, end_date=None):
-    history = pd.read_history(filename)
+def SP500_loader(dataset_config, run_config):
+    history = pd.read_csv(dataset_config.data_path)
     history.columns= history.columns.str.lower()
-
-    if start_date is not None:
-        history = history[history['date'] >= start_date] 
-    if end_date is not None:
-        history = history[history['date'] <= end_date]
+    
+    history['date'] = pd.to_datetime(history['date'])
+    
+    if run_config.start_date is not None:
+        history = history[history['date'] >= run_config.start_date]
+    if run_config.end_date is not None:
+        history = history[history['date'] <= run_config.end_date]
     
     history = history.set_index(['date', 'name'])['close'].unstack(-1)
-    history.index = pd.to_datetime(history.index)
     
     for stock in history.columns:
         if (history[stock].isnull().values.any()):

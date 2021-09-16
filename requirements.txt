@@ -6,6 +6,7 @@ networkx
 node2vec
 pandas
 PyPortfolioOpt
+pyyaml
 seaborn
 scipy
 scikit-learn

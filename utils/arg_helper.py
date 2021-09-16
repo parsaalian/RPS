@@ -27,11 +27,12 @@ def parse_arguments():
         ERROR, \
         CRITICAL"
     )
+    parser.add_argument('-t', '--test', help="Test model", action='store_true')
     args = parser.parse_args()
     return args
 
 
-def get_config(config_file, exp_dir=None, is_test=False):
+def get_config(config_file, exp_dir=None):
     """ Construct and snapshot hyper parameters """
     config = edict(yaml.load(open(config_file, 'r')))
 
@@ -44,15 +45,10 @@ def get_config(config_file, exp_dir=None, is_test=False):
 
     if exp_dir is not None:
         config.exp_dir = exp_dir
+    
+    config.save_dir = os.path.join(config.exp_dir, config.exp_name)
+    save_name = os.path.join(config.save_dir, 'config.yaml')
 
-    if config.train.is_resume and not is_test:
-        config.save_dir = config.train.resume_dir
-        save_name = os.path.join(config.save_dir, 'config_resume_{}.yaml'.format(config.run_id))  
-    else:    
-        config.save_dir = os.path.join(config.exp_dir, config.exp_name)
-        save_name = os.path.join(config.save_dir, 'config.yaml')
-
-    # snapshot hyperparameters
     mkdir(config.exp_dir)
     mkdir(config.save_dir)
 

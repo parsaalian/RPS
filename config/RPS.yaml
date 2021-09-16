@@ -1,17 +1,27 @@
 ---
   runner: RPSRunner
   test: False
+  exp_dir: exp/RPS
   dataset:
-    name: 'sp500'
-    loader: SP500_loader
-    data_path: 'data/SP500/SP_20130208_20180207.csv'
+    name: sp500
+    loader_name: SP500_loader
+    data_path: data/SP500/SP_20180402_20200401.csv
   model:
-    name: 'RPS'
+    name: RPS
     dimensions: 64
     walk_length: 2
     num_walks: 50
     workers: 7
+    window: 10
+    min_count: 1
+    batch_words: 4
     weight_function: HRP
     cluster_method: fuzzy_c_means
     sort_measure: sharpe
-    distance_graph_function: 'coth'
+    distance_transformer: coth_transformer
+  train:
+    start_date: '2019-04-01'
+    end_date: '2019-08-01'
+  test:
+    start_date: '2019-08-02'
+    end_date: '2019-09-01'
