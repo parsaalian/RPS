@@ -2,9 +2,9 @@
   runner: RPSRunner
   test: False
   dataset:
-    name: 'indextrack1'
-    loader: IndexTrackingLoader
-    data_path: data/
+    name: 'sp500'
+    loader: SP500_loader
+    data_path: 'data/SP500/SP_20130208_20180207.csv'
   model:
     name: 'RPS'
     dimensions: 64
@@ -14,3 +14,4 @@
     weight_function: HRP
     cluster_method: fuzzy_c_means
     sort_measure: sharpe
+    distance_graph_function: 'coth'
