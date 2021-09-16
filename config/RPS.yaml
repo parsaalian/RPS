@@ -1,0 +1,13 @@
+---
+  runner: RPSRunner
+  dataset:
+    loader: IndexTrackingLoader
+    data_path: data/
+  model:
+    dimensions: 64
+    walk_length: 2
+    num_walks: 50
+    workers: 7
+    weight_function: HRP
+    cluster_method: fuzzy_c_means
+    sort_measure: sharpe
