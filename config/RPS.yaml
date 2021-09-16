@@ -1,9 +1,12 @@
 ---
   runner: RPSRunner
+  test: False
   dataset:
+    name: 'indextrack1'
     loader: IndexTrackingLoader
     data_path: data/
   model:
+    name: 'RPS'
     dimensions: 64
     walk_length: 2
     num_walks: 50

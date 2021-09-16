@@ -9,7 +9,7 @@ from utils.arg_helper import parse_arguments, get_config
 
 def main():
     args = parse_arguments()
-    config = get_config(args.config_file, is_test=args.test)
+    config = get_config(args.config_file)
     
     # log info
     log_file = os.path.join(config.save_dir, "log_exp_{}.txt".format(config.run_id))
