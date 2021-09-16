@@ -3,9 +3,9 @@ import sys
 import traceback
 from pprint import pprint
 
+from models import *
 from utils.logger import setup_logging
 from utils.arg_helper import parse_arguments, get_config
-from models import RPSRunner
 
 
 def main():
