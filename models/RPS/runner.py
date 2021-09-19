@@ -1,10 +1,12 @@
 import numpy as np
 import networkx as nx
 from node2vec import Node2Vec
-from pprint import pprint
+from tqdm import tqdm
 
 from data import *
 from utils.weight_transformers import *
+from utils.clustering_methods import *
+from utils.financial_measures import calculate_measures
 
 
 def create_distance_graph(history_df, transformer):
@@ -36,18 +38,37 @@ class RPSRunner:
             eval(self.model_config.distance_transformer)
         )
         
-        model = Node2Vec(
-            distance_graph,
-            dimensions=self.model_config.dimensions,
-            walk_length=self.model_config.walk_length,
-            num_walks=self.model_config.num_walks,
-            workers=self.model_config.workers,
-        ).fit(
-            window=self.model_config.window,
-            min_count=self.model_config.min_count,
-            batch_words=self.model_config.batch_words,
-        )
+        if 'embedding_path' in self.train_config:
+            vectors = np.load(self.train_config.embedding_path)
+        else:
+            model = Node2Vec(
+                distance_graph,
+                dimensions=self.model_config.dimensions,
+                walk_length=self.model_config.walk_length,
+                num_walks=self.model_config.num_walks,
+                workers=self.model_config.workers,
+            ).fit(
+                window=self.model_config.window,
+                min_count=self.model_config.min_count,
+                batch_words=self.model_config.batch_words,
+            )
+            
+            vectors = np.array([model.wv[node] for i, node in enumerate(distance_graph.nodes())])
+            
+            np.save('{0}/embeddings.npy'.format(self.save_dir), vectors)
         
-        vectors = np.array([model.wv[node] for i, node in enumerate(distance_graph.nodes())])
+        baskets = eval(self.train_config.clustering_method)(self.train_config)
         
-        np.save('{0}/embeddings.npy'.format(self.save_dir), vectors)
+        results = []
+        
+        for i in tqdm(range(len(baskets))):
+            assets = baskets[i]
+            try:
+                weights = eval(self.train_config.weight_method)(train_dataset[assets])
+                results.append(
+                    assets,
+                    weights,
+                    *calculate_measures(assets, train_dataset, weights)
+                )
+            except Exception as e:
+                print(e)

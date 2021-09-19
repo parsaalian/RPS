@@ -22,6 +22,10 @@
   train:
     start_date: '2019-04-01'
     end_date: '2019-08-01'
+    clustering_method: FCM_clustering
+    n_clusters: 40
+    max_memberships: 2
+    weight_method: HRP_weight
   test:
     start_date: '2019-08-02'
     end_date: '2019-09-01'
