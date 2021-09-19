@@ -6,6 +6,7 @@ from tqdm import tqdm
 from data import *
 from utils.weight_transformers import *
 from utils.clustering_methods import *
+from utils.weight_functions import *
 from utils.financial_measures import calculate_measures
 
 
@@ -19,6 +20,30 @@ def create_distance_graph(history_df, transformer):
             weight = transformer(dist_mat[stock1][stock2])
             graph.add_weighted_edges_from([(stock1, stock2, weight), (stock2, stock1, weight)])
     return graph
+
+
+def df_list_to_readable(df, columns):
+    copy_df = df.copy()
+    for column in columns:
+        copy_df[column] = df[column].apply(
+            lambda x: '//'.join(list(map(str, x))))
+    return copy_df
+
+
+def readable_to_df_list(df, columns):
+    def transform_back(x):
+        try:
+            return list(map(eval, x.split('//')))
+        except:
+            try:
+                return x.split('//')
+            except:
+                return x
+
+    copy_df = df.copy()
+    for column in columns:
+        copy_df[column] = df[column].apply(transform_back)
+    return copy_df
 
 
 class RPSRunner:
@@ -37,6 +62,7 @@ class RPSRunner:
             train_dataset,
             eval(self.model_config.distance_transformer)
         )
+        assets = list(distance_graph.nodes())
         
         if 'embedding_path' in self.train_config:
             vectors = np.load(self.train_config.embedding_path)
@@ -57,18 +83,34 @@ class RPSRunner:
             
             np.save('{0}/embeddings.npy'.format(self.save_dir), vectors)
         
-        baskets = eval(self.train_config.clustering_method)(self.train_config)
+        baskets = eval(self.train_config.clustering_method)(vectors, assets, self.train_config)
         
         results = []
         
         for i in tqdm(range(len(baskets))):
-            assets = baskets[i]
             try:
-                weights = eval(self.train_config.weight_method)(train_dataset[assets])
-                results.append(
+                assets = baskets[i]
+                weight_dict = dict(eval(self.train_config.weight_method)(train_dataset[assets]))
+                # print(weight_dict)
+                assets, weights = list(weight_dict.keys()), list(weight_dict.values())
+                results.append([
                     assets,
                     weights,
                     *calculate_measures(assets, train_dataset, weights)
-                )
+                ])
             except Exception as e:
                 print(e)
+        
+        columns = [
+            'stocks', 'weights',
+            'corr_min', 'corr_max', 'corr_mean', 'corr_std',
+            'return', 'sigma', 'sharpe', 'information', 'modigliani',
+        ]
+        
+        results = np.asarray(results, dtype=object)
+                
+        df = pd.DataFrame({
+            columns[i]: results[:, i] for i in range(len(columns))
+        })
+        df = df_list_to_readable(df, ['stocks', 'weights'])
+        df.to_csv(self.save_dir + '/results.csv')
