@@ -1,14 +1,17 @@
-def future_performance():
+from utils.financial_measures import *
+
+
+def calculate_future_performance(history_df, stocks, weights):
+    return calculate_measures(stocks, history_df, weights)
+
+
+def calculate_noise_stability():
     pass
 
 
-def noise_stability():
+def calculate_time_stability():
     pass
 
 
-def time_stability():
-    pass
-
-
-def frontier():
+def calculate_frontier():
     pass

@@ -28,5 +28,6 @@
     weight_method: CLA_weight
     embedding_path: exp/RPS/RPS_sp500_2021-Sep-19-11-12-09/embeddings.npy
   test:
+    train_results: exp/RPS/RPS_sp500_2021-Sep-19-11-41-05/results.csv
     start_date: '2019-08-02'
     end_date: '2019-09-01'

@@ -8,6 +8,7 @@ from utils.weight_transformers import *
 from utils.clustering_methods import *
 from utils.weight_functions import *
 from utils.financial_measures import calculate_measures
+from utils.measures import *
 
 
 def create_distance_graph(history_df, transformer):
@@ -53,6 +54,11 @@ class RPSRunner:
         self.model_config = config.model
         self.train_config = config.train
         self.test_config = config.test
+        self.output_columns = [
+            'stocks', 'weights',
+            'corr_min', 'corr_max', 'corr_mean', 'corr_std',
+            'return', 'sigma', 'sharpe', 'information', 'modigliani',
+        ]
     
     
     def train(self):
@@ -101,16 +107,35 @@ class RPSRunner:
             except Exception as e:
                 print(e)
         
-        columns = [
-            'stocks', 'weights',
-            'corr_min', 'corr_max', 'corr_mean', 'corr_std',
-            'return', 'sigma', 'sharpe', 'information', 'modigliani',
-        ]
-        
         results = np.asarray(results, dtype=object)
                 
         df = pd.DataFrame({
-            columns[i]: results[:, i] for i in range(len(columns))
+            self.output_columns[i]: results[:, i] for i in range(len(self.output_columns))
         })
         df = df_list_to_readable(df, ['stocks', 'weights'])
         df.to_csv(self.save_dir + '/results.csv')
+    
+    
+    def test(self):
+        test_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config)
+        
+        weights_df = readable_to_df_list(pd.read_csv(self.test_config.train_results), ['stocks', 'weights'])
+        
+        # future performance measure
+        
+        future_performances = []
+        
+        for _, row in weights_df.iterrows():
+            future_performances.append([
+                row.stocks,
+                row.weights,
+                *calculate_measures(row.stocks, test_dataset, row.weights)
+            ])
+        
+        future_performances = np.asarray(future_performances, dtype=object)
+                
+        df = pd.DataFrame({
+            self.output_columns[i]: future_performances[:, i] for i in range(len(self.output_columns))
+        })
+        df = df_list_to_readable(df, ['stocks', 'weights'])
+        df.to_csv(self.save_dir + '/future_performances.csv')
