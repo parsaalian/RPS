@@ -7,7 +7,7 @@ def calculate_future_performance(history_df, stocks, weights):
 
 
 def calculate_noise_stability(set_a, set_b):
-    return distance.jaccard(set_a, set_b)
+    return len(set_a.intersection(set_b)) / len(set_a.union(set_b))
 
 
 def calculate_time_stability():

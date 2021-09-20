@@ -198,7 +198,10 @@ class RPSRunner:
             
             distances = []
             for i in range(len(df)):
-                distance = calculate_noise_stability(df.loc[i, 'stocks'], pre_df.loc[i, 'stocks'])
+                distance = calculate_noise_stability(
+                    set(df.loc[i, 'stocks']),
+                    set(pre_df.loc[i, 'stocks'])
+                )
                 distances.append(distance)
             
             np.save('{0}/noise_distance.npy'.format(self.save_dir), np.array(distances))
