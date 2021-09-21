@@ -1,5 +1,6 @@
 from pypfopt.cla import CLA
 from pypfopt.hierarchical_portfolio import HRPOpt
+from pypfopt.expected_returns import ema_historical_return
 
 
 def historical_returns(history_df):
@@ -13,9 +14,8 @@ def HRP_weight(history_df):
 
 
 def CLA_weight(history_df):
-    # TODO: convert to expected
-    returns = historical_returns(history_df)
-    optimizer = CLA(expected_returns=returns)
+    returns = ema_historical_return(history_df)
+    optimizer = CLA(expected_returns=returns, cov_matrix=history_df.cov())
     return optimizer
 
 

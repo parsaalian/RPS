@@ -1,0 +1,23 @@
+---
+  runner: SARunner
+  exp_dir: exp/SA
+  dataset:
+    name: sp500
+    loader_name: SP500_loader
+    data_path: data/SP500/SP_20180402_20200401.csv
+  model:
+    name: SA
+    cardinality: 20
+    gamma: 0.95
+    gamma_u: 0.95
+    u: 0.1
+    T: 100
+  train:
+    count: 20
+    start_date: '2019-04-01'
+    end_date: '2019-08-01'
+  test:
+    test_method: future_performance
+    start_date: '2019-08-02'
+    end_date: '2019-09-01'
+    train_results: exp/Mantegna/Mantegna_sp500_2021-Sep-21-13-38-58/mantegna_results.csv
