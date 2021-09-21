@@ -1,0 +1,21 @@
+---
+  runner: RandomRunner
+  exp_dir: exp/Random
+  dataset:
+    name: sp500
+    loader_name: SP500_loader
+    data_path: data/SP500/SP_20180402_20200401.csv
+  model:
+    name: Random
+    weight_method: HRP_weight
+    port_mean: 30
+    port_std: 3
+    count: 10
+  train:
+    start_date: '2019-04-01'
+    end_date: '2019-08-01'
+  test:
+    test_method: future_performance
+    start_date: '2019-08-02'
+    end_date: '2019-09-01'
+    train_results: exp/Mantegna/Mantegna_sp500_2021-Sep-21-13-38-58/mantegna_results.csv
