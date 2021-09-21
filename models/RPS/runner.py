@@ -117,7 +117,7 @@ def train_and_save_node2vec_model(
             output_columns[i]: results[:, i] for i in range(len(output_columns))
         })
         df = df_list_to_readable(df, ['stocks', 'weights'])
-        df.to_csv('{0}/{1}.npy'.format(save_dir, save_paths['results']), index=False)
+        df.to_csv('{0}/{1}.csv'.format(save_dir, save_paths['results']), index=False)
     
     return df
 
