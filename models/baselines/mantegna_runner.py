@@ -64,9 +64,7 @@ def train_and_save_mantegna_model(
             print(e)
     
     results = np.asarray(results, dtype=object)
-    
-    print(results)
-    
+        
     df = pd.DataFrame({
         output_columns[i]: results[:, i] for i in range(len(output_columns))
     })
@@ -106,13 +104,92 @@ class MantegnaRunner:
     
     
     def test(self):
-        test_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config)
-        
-        weights_df = readable_to_df_list(pd.read_csv(self.test_config.train_results), ['stocks', 'weights'])
-        
-        df_future_performance(
-            test_dataset,
-            weights_df,
-            self.output_columns,
-            self.save_dir + '/future_performances.csv'
-        )
+        if self.test_config.test_method == 'future_performance':
+            test_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config)
+            
+            weights_df = readable_to_df_list(pd.read_csv(self.test_config.train_results), ['stocks', 'weights'])
+            
+            df_future_performance(
+                test_dataset,
+                weights_df,
+                self.output_columns,
+                self.save_dir + '/future_performances.csv'
+            )
+        elif self.test_config.test_method == 'noise_stability':
+            train_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.train_config)
+
+            corrs = train_dataset.corr().fillna(1)
+            noise = np.random.normal(0, self.test_config.noise_sigma, corrs.shape)
+            noised = corrs + noise
+            noised = noised.clip(lower=-1, upper=1)
+            np.fill_diagonal(noised.values, 1)
+            noised.to_csv(self.save_dir + '/noised_correlations.csv', index=False)
+            d = noised.apply(lambda x: np.sqrt(2 * (1 - x)))
+            
+            df = train_and_save_mantegna_model(
+                train_dataset,
+                d,
+                self.model_config,
+                self.save_dir,
+                save_path='mantegna_noised_results'
+            )
+            
+            df = df.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            
+            pre_df = readable_to_df_list(pd.read_csv(self.test_config.train_results), ['stocks', 'weights'])
+            pre_df = pre_df.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            
+            stability_df = pd.DataFrame(index=list(range(len(df))), columns=list(range(len(pre_df))))
+            
+            for i in range(len(df)):
+                for j in range(len(pre_df)):
+                    distance = calculate_noise_stability(
+                        set(df.loc[i, 'stocks']),
+                        set(pre_df.loc[j, 'stocks'])
+                    )
+                    stability_df.loc[i, j] = distance
+            
+            stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)
+        elif self.test_config.test_method == 'time_stability':
+            train_dataset1 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test1)
+            train_dataset2 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test2)
+            
+            df1 = train_and_save_node2vec_model(
+                train_dataset1,
+                train_dataset1.corr().fillna(1),
+                self.model_config,
+                self.save_dir,
+                self.test_config.test1.embedding_path if 'embedding_path' in self.test_config.test1 else None.
+                self.test_config.test1.result_path if 'result_path' in self.test_config.test1 else None,
+                save_paths={
+                    'results': 'results1',
+                    'embeddings': 'embeddings1'
+                }
+            )
+            
+            df2 = train_and_save_node2vec_model(
+                train_dataset2,
+                train_dataset2.corr().fillna(1),
+                self.model_config,
+                self.save_dir,
+                self.test_config.test2.embedding_path if 'embedding_path' in self.test_config.test2 else None.
+                self.test_config.test2.result_path if 'result_path' in self.test_config.test2 else None,
+                save_paths={
+                    'results': 'results2',
+                    'embeddings': 'embeddings2'
+                }
+            )
+            
+            df1 = df1.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            df2 = df2.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            
+            stability_df = pd.DataFrame(index=list(range(len(df1))), columns=list(range(len(df2))))
+            
+            for i in range(len(df1)):
+                for j in range(len(df2)):
+                    distance = calculate_noise_stability(
+                        set(df1.loc[i, 'stocks']),
+                        set(df2.loc[j, 'stocks'])
+                    )
+                    stability_df.loc[i, j] = distance
+            stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)
