@@ -1,4 +1,3 @@
-# TODO: move train procedure into another function as it is used pretty often.
 import numpy as np
 import networkx as nx
 from node2vec import Node2Vec
@@ -146,11 +145,11 @@ class RPSRunner:
     
     
     def test(self):
-        test_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config)
-        
-        weights_df = readable_to_df_list(pd.read_csv(self.test_config.train_results), ['stocks', 'weights'])
-        
         if self.test_config.test_method == 'future_performance':
+            test_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config)
+        
+            weights_df = readable_to_df_list(pd.read_csv(self.test_config.train_results), ['stocks', 'weights'])
+            
             future_performances = []
             
             for _, row in weights_df.iterrows():
@@ -168,9 +167,7 @@ class RPSRunner:
             df = df_list_to_readable(df, ['stocks', 'weights'])
             df.to_csv(self.save_dir + '/future_performances.csv', index=False)
 
-        elif self.test_config.test_method == 'noise_stability':
-            # train again with noisy correlation matrix
-            
+        elif self.test_config.test_method == 'noise_stability':            
             train_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.train_config)
 
             corrs = train_dataset.corr().fillna(1)
@@ -204,4 +201,39 @@ class RPSRunner:
                     )
                     stability_df.loc[i, j] = distance
             
+            stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)
+        elif self.test_config.test_method == 'time_stability':
+            train_dataset1 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test1)
+            train_dataset2 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test2)
+            
+            df1 = train_and_save_node2vec_model(
+                train_dataset1,
+                train_dataset1.corr().fillna(1),
+                self.model_config,
+                self.save_dir,
+                self.test_config.test1.embedding_path if 'embedding_path' in self.test_config.test1 else None.
+                self.test_config.test1.result_path if 'result_path' in self.test_config.test1 else None
+            )
+            
+            df2 = train_and_save_node2vec_model(
+                train_dataset2,
+                train_dataset2.corr().fillna(1),
+                self.model_config,
+                self.save_dir,
+                self.test_config.test2.embedding_path if 'embedding_path' in self.test_config.test2 else None.
+                self.test_config.test2.result_path if 'result_path' in self.test_config.test2 else None
+            )
+            
+            df1 = df1.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            df2 = df2.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            
+            stability_df = pd.DataFrame(index=list(range(len(df1))), columns=list(range(len(df2))))
+            
+            for i in range(len(df1)):
+                for j in range(len(df2)):
+                    distance = calculate_noise_stability(
+                        set(df1.loc[i, 'stocks']),
+                        set(df2.loc[j, 'stocks'])
+                    )
+                    stability_df.loc[i, j] = distance
             stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)

@@ -28,10 +28,11 @@
     end_date: '2019-08-01'
     embedding_path: exp/RPS/RPS_sp500_2021-Sep-19-11-12-09/embeddings.npy
   test:
-    test_method: noise_stability
-    train_results: exp/RPS/RPS_sp500_2021-Sep-19-11-41-05/results.csv
-    start_date: '2019-08-02'
-    end_date: '2019-09-01'
+    test_method: time_stability
     sort_column: sharpe
-    noise_sigma: 0.001
-    result_path: exp/RPS/RPS_sp500_2021-Sep-21-10-47-40/results.csv
+    test1:
+      start_date: '2019-04-01'
+      end_date: '2019-05-01'
+    test2:
+      start_date: '2019-05-01'
+      end_date: '2019-06-01'
