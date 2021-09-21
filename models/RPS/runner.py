@@ -46,6 +46,78 @@ def readable_to_df_list(df, columns):
     return copy_df
 
 
+def train_and_save_node2vec_model(
+    history_df,
+    correlation_matrix,
+    model_config,
+    save_dir,
+    embedding_path=None,
+    result_path=None,
+):
+    output_columns = [
+        'stocks', 'weights',
+        'corr_min', 'corr_max', 'corr_mean', 'corr_std',
+        'return', 'sigma', 'sharpe', 'information', 'modigliani',
+    ]
+    
+    distance_graph = create_distance_graph(
+        history_df.columns,
+        correlation_matrix,
+        eval(model_config.distance_transformer)
+    )
+    assets = list(distance_graph.nodes())
+    
+    if result_path is not None:
+        pass
+    elif embedding_path is not None:
+        vectors = np.load(embedding_path)
+    else:
+        model = Node2Vec(
+            distance_graph,
+            dimensions=model_config.dimensions,
+            walk_length=model_config.walk_length,
+            num_walks=model_config.num_walks,
+            workers=model_config.workers,
+        ).fit(
+            window=model_config.window,
+            min_count=model_config.min_count,
+            batch_words=model_config.batch_words,
+        )
+        
+        vectors = np.array([model.wv[node] for i, node in enumerate(distance_graph.nodes())])
+        
+        np.save('{0}/embeddings.npy'.format(save_dir), vectors)
+    
+    if result_path is not None:
+        df = readable_to_df_list(pd.read_csv(result_path), columns=['stocks', 'weights'])
+    else:
+        baskets = eval(model_config.clustering_method)(vectors, assets, model_config)
+        
+        results = []
+        
+        for i in tqdm(range(len(baskets))):
+            try:
+                assets = baskets[i]
+                weight_dict = dict(eval(model_config.weight_method)(history_df[assets]))
+                # print(weight_dict)
+                assets, weights = list(weight_dict.keys()), list(weight_dict.values())
+                results.append([
+                    assets,
+                    weights,
+                    *calculate_measures(assets, history_df, weights)
+                ])
+            except Exception as e:
+                print(e)
+        
+        results = np.asarray(results, dtype=object)
+        df = pd.DataFrame({
+            output_columns[i]: results[:, i] for i in range(len(output_columns))
+        })
+        df = df_list_to_readable(df, ['stocks', 'weights'])
+        df.to_csv(save_dir + '/results.csv', index=False)
+    
+    return df
+
 class RPSRunner:
     def __init__(self, config):
         self.save_dir = config.save_dir
@@ -63,56 +135,14 @@ class RPSRunner:
     def train(self):
         train_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.train_config)
         
-        distance_graph = create_distance_graph(
-            train_dataset.columns,
+        train_and_save_node2vec_model(
+            train_dataset,
             train_dataset.corr().fillna(1),
-            eval(self.model_config.distance_transformer)
+            self.model_config,
+            self.save_dir,
+            self.train_config.embedding_path if 'embedding_path' in self.train_config else None.
+            self.train_config.result_path if 'result_path' in self.train_config else None
         )
-        assets = list(distance_graph.nodes())
-        
-        if 'embedding_path' in self.train_config:
-            vectors = np.load(self.train_config.embedding_path)
-        else:
-            model = Node2Vec(
-                distance_graph,
-                dimensions=self.model_config.dimensions,
-                walk_length=self.model_config.walk_length,
-                num_walks=self.model_config.num_walks,
-                workers=self.model_config.workers,
-            ).fit(
-                window=self.model_config.window,
-                min_count=self.model_config.min_count,
-                batch_words=self.model_config.batch_words,
-            )
-            
-            vectors = np.array([model.wv[node] for i, node in enumerate(distance_graph.nodes())])
-            
-            np.save('{0}/embeddings.npy'.format(self.save_dir), vectors)
-        
-        baskets = eval(self.train_config.clustering_method)(vectors, assets, self.train_config)
-        
-        results = []
-        
-        for i in tqdm(range(len(baskets))):
-            try:
-                assets = baskets[i]
-                weight_dict = dict(eval(self.train_config.weight_method)(train_dataset[assets]))
-                # print(weight_dict)
-                assets, weights = list(weight_dict.keys()), list(weight_dict.values())
-                results.append([
-                    assets,
-                    weights,
-                    *calculate_measures(assets, train_dataset, weights)
-                ])
-            except Exception as e:
-                print(e)
-        
-        results = np.asarray(results, dtype=object)
-        df = pd.DataFrame({
-            self.output_columns[i]: results[:, i] for i in range(len(self.output_columns))
-        })
-        df = df_list_to_readable(df, ['stocks', 'weights'])
-        df.to_csv(self.save_dir + '/results.csv')
     
     
     def test(self):
@@ -136,7 +166,7 @@ class RPSRunner:
                 self.output_columns[i]: future_performances[:, i] for i in range(len(self.output_columns))
             })
             df = df_list_to_readable(df, ['stocks', 'weights'])
-            df.to_csv(self.save_dir + '/future_performances.csv')
+            df.to_csv(self.save_dir + '/future_performances.csv', index=False)
 
         elif self.test_config.test_method == 'noise_stability':
             # train again with noisy correlation matrix
@@ -148,60 +178,30 @@ class RPSRunner:
             noised = corrs + noise
             noised = noised.clip(lower=-1, upper=1)
             np.fill_diagonal(noised.values, 1)
-
-            distance_graph = create_distance_graph(
-                train_dataset.columns,
+            noised.to_csv(self.save_dir + '/noised_correlations.csv', index=False)
+            
+            df = train_and_save_node2vec_model(
+                train_dataset,
                 noised,
-                eval(self.model_config.distance_transformer)
+                self.model_config,
+                self.save_dir,
+                self.test_config.embedding_path if 'embedding_path' in self.test_config else None,
+                self.test_config.result_path if 'result_path' in self.test_config else None
             )
-            assets = list(distance_graph.nodes())
-            model = Node2Vec(
-                distance_graph,
-                dimensions=self.model_config.dimensions,
-                walk_length=self.model_config.walk_length,
-                num_walks=self.model_config.num_walks,
-                workers=self.model_config.workers,
-            ).fit(
-                window=self.model_config.window,
-                min_count=self.model_config.min_count,
-                batch_words=self.model_config.batch_words,
-            )
-            
-            vectors = np.array([model.wv[node] for i, node in enumerate(distance_graph.nodes())])
-
-            baskets = eval(self.train_config.clustering_method)(vectors, assets, self.train_config)
-            
-            results = []
-            for i in tqdm(range(len(baskets))):
-                try:
-                    assets = baskets[i]
-                    weight_dict = dict(eval(self.train_config.weight_method)(train_dataset[assets]))
-                    # print(weight_dict)
-                    assets, weights = list(weight_dict.keys()), list(weight_dict.values())
-                    results.append([
-                        assets,
-                        weights,
-                        *calculate_measures(assets, train_dataset, weights)
-                    ])
-                except Exception as e:
-                    print(e)
-            
-            results = np.asarray(results, dtype=object)
-            df = pd.DataFrame({
-                self.output_columns[i]: results[:, i] for i in range(len(self.output_columns))
-            })
             
             df = df.sort_values(self.test_config.sort_column).reset_index(drop=True)
             
             pre_df = readable_to_df_list(pd.read_csv(self.test_config.train_results), ['stocks', 'weights'])
             pre_df = pre_df.sort_values(self.test_config.sort_column).reset_index(drop=True)
             
-            distances = []
-            for i in range(len(df)):
-                distance = calculate_noise_stability(
-                    set(df.loc[i, 'stocks']),
-                    set(pre_df.loc[i, 'stocks'])
-                )
-                distances.append(distance)
+            stability_df = pd.DataFrame(index=list(range(len(df))), columns=list(range(len(pre_df))))
             
-            np.save('{0}/noise_distance.npy'.format(self.save_dir), np.array(distances))
+            for i in range(len(df)):
+                for j in range(len(pre_df)):
+                    distance = calculate_noise_stability(
+                        set(df.loc[i, 'stocks']),
+                        set(pre_df.loc[j, 'stocks'])
+                    )
+                    stability_df.loc[i, j] = distance
+            
+            stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)

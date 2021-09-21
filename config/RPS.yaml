@@ -19,13 +19,13 @@
     cluster_method: fuzzy_c_means
     sort_measure: sharpe
     distance_transformer: coth_transformer
-  train:
-    start_date: '2019-04-01'
-    end_date: '2019-08-01'
     clustering_method: FCM_clustering
     n_clusters: 40
     max_memberships: 2
     weight_method: HRP_weight
+  train:
+    start_date: '2019-04-01'
+    end_date: '2019-08-01'
     embedding_path: exp/RPS/RPS_sp500_2021-Sep-19-11-12-09/embeddings.npy
   test:
     test_method: noise_stability
@@ -33,4 +33,5 @@
     start_date: '2019-08-02'
     end_date: '2019-09-01'
     sort_column: sharpe
-    noise_sigma: 0.01
+    noise_sigma: 0.001
+    result_path: exp/RPS/RPS_sp500_2021-Sep-21-10-47-40/results.csv
