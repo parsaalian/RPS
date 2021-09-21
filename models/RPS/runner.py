@@ -52,6 +52,10 @@ def train_and_save_node2vec_model(
     save_dir,
     embedding_path=None,
     result_path=None,
+    save_paths={
+        'results': 'results',
+        'embeddings': 'embeddings'
+    }
 ):
     output_columns = [
         'stocks', 'weights',
@@ -85,7 +89,7 @@ def train_and_save_node2vec_model(
         
         vectors = np.array([model.wv[node] for i, node in enumerate(distance_graph.nodes())])
         
-        np.save('{0}/embeddings.npy'.format(save_dir), vectors)
+        np.save('{0}/{1}.npy'.format(save_dir, save_paths['embeddings']), vectors)
     
     if result_path is not None:
         df = readable_to_df_list(pd.read_csv(result_path), columns=['stocks', 'weights'])
@@ -113,7 +117,7 @@ def train_and_save_node2vec_model(
             output_columns[i]: results[:, i] for i in range(len(output_columns))
         })
         df = df_list_to_readable(df, ['stocks', 'weights'])
-        df.to_csv(save_dir + '/results.csv', index=False)
+        df.to_csv('{0}/{1}.npy'.format(save_dir, save_paths['results']), index=False)
     
     return df
 
@@ -183,7 +187,11 @@ class RPSRunner:
                 self.model_config,
                 self.save_dir,
                 self.test_config.embedding_path if 'embedding_path' in self.test_config else None,
-                self.test_config.result_path if 'result_path' in self.test_config else None
+                self.test_config.result_path if 'result_path' in self.test_config else None,
+                save_paths={
+                    'results': 'noise_results',
+                    'embeddings': 'noise_embeddings'
+                }
             )
             
             df = df.sort_values(self.test_config.sort_column).reset_index(drop=True)
@@ -212,7 +220,11 @@ class RPSRunner:
                 self.model_config,
                 self.save_dir,
                 self.test_config.test1.embedding_path if 'embedding_path' in self.test_config.test1 else None.
-                self.test_config.test1.result_path if 'result_path' in self.test_config.test1 else None
+                self.test_config.test1.result_path if 'result_path' in self.test_config.test1 else None,
+                save_paths={
+                    'results': 'results1',
+                    'embeddings': 'embeddings1'
+                }
             )
             
             df2 = train_and_save_node2vec_model(
@@ -221,7 +233,11 @@ class RPSRunner:
                 self.model_config,
                 self.save_dir,
                 self.test_config.test2.embedding_path if 'embedding_path' in self.test_config.test2 else None.
-                self.test_config.test2.result_path if 'result_path' in self.test_config.test2 else None
+                self.test_config.test2.result_path if 'result_path' in self.test_config.test2 else None,
+                save_paths={
+                    'results': 'results2',
+                    'embeddings': 'embeddings2'
+                }
             )
             
             df1 = df1.sort_values(self.test_config.sort_column).reset_index(drop=True)
