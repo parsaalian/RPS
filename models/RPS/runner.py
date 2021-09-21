@@ -4,6 +4,7 @@ from node2vec import Node2Vec
 from tqdm import tqdm
 
 from data import *
+from utils.readable_df import *
 from utils.weight_transformers import *
 from utils.clustering_methods import *
 from utils.weight_functions import *
@@ -19,30 +20,6 @@ def create_distance_graph(assets, corrs, transformer):
             weight = transformer(corrs[stock1][stock2])
             graph.add_weighted_edges_from([(stock1, stock2, weight), (stock2, stock1, weight)])
     return graph
-
-
-def df_list_to_readable(df, columns):
-    copy_df = df.copy()
-    for column in columns:
-        copy_df[column] = df[column].apply(
-            lambda x: '//'.join(list(map(str, x))))
-    return copy_df
-
-
-def readable_to_df_list(df, columns):
-    def transform_back(x):
-        try:
-            return list(map(eval, x.split('//')))
-        except:
-            try:
-                return x.split('//')
-            except:
-                return x
-
-    copy_df = df.copy()
-    for column in columns:
-        copy_df[column] = df[column].apply(transform_back)
-    return copy_df
 
 
 def train_and_save_node2vec_model(

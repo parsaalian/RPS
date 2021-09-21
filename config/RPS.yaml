@@ -15,7 +15,6 @@
     window: 10
     min_count: 1
     batch_words: 4
-    weight_function: HRP
     cluster_method: fuzzy_c_means
     sort_measure: sharpe
     distance_transformer: coth_transformer
