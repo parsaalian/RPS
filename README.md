@@ -8,6 +8,6 @@ pip3 install -r requirements.txt
 
 [] - run on different data
 [] - add all measures to all models
-[] - implement MVO
 [] - run different setups
 [] - create visualizations
+[] - add splex model

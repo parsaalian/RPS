@@ -78,8 +78,8 @@ def train_and_save_node2vec_model(
         for i in tqdm(range(len(baskets))):
             try:
                 assets = baskets[i]
-                weight_dict = dict(eval(model_config.weight_method)(history_df[assets]))
-                # print(weight_dict)
+                weight_dict = dict(eval(model_config.weight_method)(history_df[assets], model_config))
+                # print(weight_dict)1
                 assets, weights = list(weight_dict.keys()), list(weight_dict.values())
                 results.append([
                     assets,
