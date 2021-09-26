@@ -42,10 +42,15 @@ def beta(port_returns, benchmark_returns):
 
 
 def calculate_measures(stocks, price_df, weights):
+    print(1)
     if len(stocks) == 0:
         return ([], 0, 0, 0, 0, 0, 0, 0, 0, 0)
     
+    print(2)
+    
     stocks_prices = price_df[stocks].fillna(0, axis=1)
+    
+    print(3)
     
     port_std = np.sqrt(
         np.dot(weights, np.dot(stocks_prices.pct_change(1).dropna().cov().values, weights))
@@ -54,10 +59,14 @@ def calculate_measures(stocks, price_df, weights):
     port_return = port_returns.mean() * 252
     benchmark_returns = (price_df.pct_change() * ([1/len(price_df.columns)]*len(price_df.columns))).sum(axis=1)
     
+    print(4)
+    
     port_sharpe = sharpe_ratio(port_return, port_std)
     port_information = information_ratio(port_return, benchmark_returns)
     port_modigliani = modigliani_ratio(port_sharpe, benchmark_returns)
     # port_treynor = treynor_ratio(port_return, port_returns, benchmark_returns)
+    
+    print(5)
     
     corrs = price_df.corr().stack().reset_index(level=0).rename(
         columns={'name':'name1'}
@@ -67,6 +76,8 @@ def calculate_measures(stocks, price_df, weights):
     corrs = corrs[corrs['name1'] != corrs['name2']]
     desc = corrs[corrs.name1.isin(stocks) & corrs.name2.isin(stocks)]['corr'].describe()
     corr_min, corr_max, corr_mean, corr_std = desc['min'], desc['max'], desc['mean'], desc['std']
+    
+    print(6)
     
     return (
         weights,

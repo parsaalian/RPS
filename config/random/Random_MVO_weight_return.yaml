@@ -1,0 +1,20 @@
+dataset:
+  data_path: data/SP500/SP_20180402_20200401.csv
+  loader_name: SP500_loader
+  name: sp500
+exp_dir: exp/Random
+model:
+  count: 10
+  model_config: return
+  name: Random
+  port_mean: 30
+  port_std: 3
+  weight_method: MVO_weight
+runner: RandomRunner
+test:
+  end_date: '2019-09-01'
+  start_date: '2019-08-02'
+  test_method: future_performance
+train:
+  end_date: '2019-08-01'
+  start_date: '2019-04-01'
