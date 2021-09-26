@@ -2,9 +2,9 @@
   runner: SARunner
   exp_dir: exp/SA
   dataset:
-    name: sp500
-    loader_name: SP500_loader
-    data_path: data/SP500/SP_20180402_20200401.csv
+    name: indextrack5
+    loader_name: indextrack_loader
+    data_path: data/indextrack/indextrack5.txt
   model:
     name: SA
     cardinality: 20
@@ -14,10 +14,25 @@
     T: 100
   train:
     count: 20
-    start_date: '2019-04-01'
-    end_date: '2019-08-01'
+    start_date: 0
+    end_date: 200
   test:
-    test_method: future_performance
-    start_date: '2019-08-02'
-    end_date: '2019-09-01'
-    train_results: exp/Mantegna/Mantegna_sp500_2021-Sep-21-13-38-58/mantegna_results.csv
+    # test_method: future_performance
+    # start_date: 201
+    # end_date: 290
+    # train_results: exp/Mantegna/Mantegna_sp500_2021-Sep-21-13-38-58/mantegna_results.csv
+
+    # test_method: noise_stability
+    # sort_column: sharpe
+    # noise_sigma: 0.01
+    # start_date: 201
+    # end_date: 290
+
+    # test_method: time_stability
+    # sort_column: sharpe
+    # test1:
+    #   start_date: 0
+    #   end_date: 20
+    # test2:
+    #   start_date: 20
+    #   end_date: 40

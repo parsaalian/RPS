@@ -48,6 +48,7 @@ def get_config(config_file, exp_dir=None):
         config.model.optimize_method if 'optimize_method' in config.model else None,
         str(config.model.cardinality) if 'cardinality' in config.model else None,
         str(config.model.s) if 's' in config.model else None,
+        time.strftime('%Y-%b-%d-%H-%M-%S'),
     ]))
     
     config.exp_name = '_'.join(exp_name)

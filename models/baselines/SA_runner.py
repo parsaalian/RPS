@@ -94,25 +94,29 @@ class SARunner:
         self.model_config = config.model
         self.train_config = config.train
         self.test_config = config.test
+        self.output_columns = [
+            'stocks', 'weights',
+            'corr_min', 'corr_max', 'corr_mean', 'corr_std',
+            'return', 'sigma', 'sharpe', 'information', 'modigliani',
+        ]
     
     
     def test(self):
+        train_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.train_config)
+        
+        df = train_multi_sa_models(
+            train_dataset,
+            train_dataset.cov(),
+            self.model_config,
+            self.train_config,
+            self.save_dir
+        )
+        
         if self.test_config.test_method == 'future_performance':
-            train_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.train_config)
-            
-            df = train_multi_sa_models(
-                train_dataset,
-                train_dataset.cov(),
-                self.model_config,
-                self.train_config,
-                self.save_dir
-            )
-            
             test_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config)
     
             df_future_performance(test_dataset, df, self.output_columns, self.save_dir + '/future_performance.csv')
-            
-        if self.test_config.test_method == 'noise_performance':
+        elif self.test_config.test_method == 'noise_stability':
             train_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.train_config)
             
             cov_to_corr = train_dataset.cov().divide(train_dataset.corr())
@@ -124,7 +128,7 @@ class SARunner:
             noised.to_csv(self.save_dir + '/noised_correlations.csv', index=False)
             C = noised.multiply(cov_to_corr)
             
-            df = train_multi_sa_models(
+            new_df = train_multi_sa_models(
                 train_dataset,
                 C,
                 self.model_config,
@@ -132,10 +136,22 @@ class SARunner:
                 self.save_dir
             )
             
-            test_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config)
+            new_df = new_df.sort_values(self.test_config.sort_column).reset_index(drop=True)
             
-            df_future_performance(test_dataset, df, self.output_columns, self.save_dir + '/future_performance.csv')
-        if self.test_config.test_method == 'time_stability':
+            df = df.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            
+            stability_df = pd.DataFrame(index=list(range(len(new_df))), columns=list(range(len(df))))
+            
+            for i in range(len(new_df)):
+                for j in range(len(df)):
+                    distance = calculate_noise_stability(
+                        set(new_df.loc[i, 'stocks']),
+                        set(df.loc[j, 'stocks'])
+                    )
+                    stability_df.loc[i, j] = distance
+            
+            stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)
+        elif self.test_config.test_method == 'time_stability':
             train_dataset1 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test1)
             train_dataset2 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test2)
             
