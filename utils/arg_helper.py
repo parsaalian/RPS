@@ -38,15 +38,27 @@ def get_config(config_file, exp_dir=None):
 
     # create hyper parameters
     config.run_id = str(os.getpid())
-    config.exp_name = '_'.join([
-        config.model.name, config.dataset.name,
-        time.strftime('%Y-%b-%d-%H-%M-%S')
-    ])
+    
+    exp_name = list(filter(lambda x: x is not None, [
+        config.model.name,
+        config.dataset.name,
+        config.model.clustering_method if 'clustering_method' in config.model else None,
+        str(config.model.n_clusters) if 'n_clusters' in config.model else None,
+        config.model.weight_method if 'weight_method' in config.model else None,
+        config.model.optimize_method if 'optimize_method' in config.model else None,
+        str(config.model.cardinality) if 'cardinality' in config.model else None,
+        str(config.model.s) if 's' in config.model else None,
+    ]))
+    
+    config.exp_name = '_'.join(exp_name)
 
     if exp_dir is not None:
         config.exp_dir = exp_dir
     
-    config.save_dir = os.path.join(config.exp_dir, config.exp_name)
+    if config.test:
+        config.save_dir = os.path.join(config.exp_dir, 'test', config.exp_name, config.test.test_method)
+    else:
+        config.save_dir = os.path.join(config.exp_dir, 'train', config.exp_name)
     save_name = os.path.join(config.save_dir, 'config.yaml')
 
     mkdir(config.exp_dir)

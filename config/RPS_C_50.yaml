@@ -1,0 +1,30 @@
+---
+  runner: RPSRunner
+  test: False
+  exp_dir: exp/RPS
+  dataset:
+    name: sp500
+    loader_name: SP500_loader
+    data_path: data/SP500/SP_20180402_20200401.csv
+  model:
+    name: RPS
+    dimensions: 64
+    walk_length: 2
+    num_walks: 50
+    workers: 7
+    window: 10
+    min_count: 1
+    batch_words: 4
+    cluster_method: fuzzy_c_means
+    sort_measure: sharpe
+    distance_transformer: coth_transformer
+    clustering_method: FCM_clustering
+    n_clusters: 50
+    max_memberships: 2
+    weight_method: MVO_weight
+    optimize_method: volatility
+  train:
+    start_date: '2019-04-01'
+    end_date: '2019-08-01'
+    embedding_path: exp/RPS/RPS_sp500_2021-Sep-26-13-54-38/embeddings.npy
+  test:

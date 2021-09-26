@@ -21,7 +21,7 @@ def HRP_weight(history_df, _):
 
 def CLA_weight(history_df, _):
     returns = ema_historical_return(history_df)
-    optimizer = CLA(expected_returns=returns, cov_matrix=history_df.cov())
+    optimizer = CLA(expected_returns=returns, cov_matrix=history_df.cov()).max_sharpe()
     return optimizer
 
 
