@@ -1,0 +1,20 @@
+test:
+    test_method: future_performance
+    start_date: '2019-08-02'
+    end_date: '2019-09-01'
+    train_results: exp/Mantegna/Mantegna_sp500_2021-Sep-21-13-38-58/mantegna_results.csv
+
+    test_method: noise_stability
+    sort_column: sharpe
+    noise_sigma: 0.01
+    start_date: '2019-08-02'
+    end_date: '2019-09-01'
+
+    test_method: time_stability
+    sort_column: sharpe
+    test1:
+      start_date: '2019-04-01'
+      end_date: '2019-04-08'
+    test2:
+      start_date: '2019-04-09'
+      end_date: '2019-08-16'
