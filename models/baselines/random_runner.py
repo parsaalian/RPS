@@ -88,3 +88,5 @@ class RandomRunner:
                 self.output_columns,
                 self.save_dir + '/future_performances.csv'
             )
+        else:
+            raise Exception('Test method not supported for random')

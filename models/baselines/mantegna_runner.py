@@ -152,32 +152,27 @@ class MantegnaRunner:
             stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)
         elif self.test_config.test_method == 'time_stability':
             train_dataset1 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test1)
-            train_dataset2 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test2)
+            corrs1 = train_dataset1.corr().fillna(1)
+            d1 = corrs1.apply(lambda x: np.sqrt(2 * (1 - x)))
             
-            df1 = train_and_save_node2vec_model(
+            train_dataset2 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test2)
+            corrs2 = train_dataset1.corr().fillna(1)
+            d2 = corrs2.apply(lambda x: np.sqrt(2 * (1 - x)))
+            
+            df1 = train_and_save_mantegna_model(
                 train_dataset1,
-                train_dataset1.corr().fillna(1),
+                d1,
                 self.model_config,
                 self.save_dir,
-                self.test_config.test1.embedding_path if 'embedding_path' in self.test_config.test1 else None.
-                self.test_config.test1.result_path if 'result_path' in self.test_config.test1 else None,
-                save_paths={
-                    'results': 'results1',
-                    'embeddings': 'embeddings1'
-                }
+                save_path='mantegna_results1'
             )
             
-            df2 = train_and_save_node2vec_model(
+            df2 = train_and_save_mantegna_model(
                 train_dataset2,
-                train_dataset2.corr().fillna(1),
+                d2,
                 self.model_config,
                 self.save_dir,
-                self.test_config.test2.embedding_path if 'embedding_path' in self.test_config.test2 else None.
-                self.test_config.test2.result_path if 'result_path' in self.test_config.test2 else None,
-                save_paths={
-                    'results': 'results2',
-                    'embeddings': 'embeddings2'
-                }
+                save_path='mantegna_results2'
             )
             
             df1 = df1.sort_values(self.test_config.sort_column).reset_index(drop=True)

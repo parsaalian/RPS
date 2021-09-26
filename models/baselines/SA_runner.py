@@ -8,9 +8,8 @@ from utils.financial_measures import *
 from utils.measures import *
 
 
-def train_and_save_sa_model(history_df, model_config):
+def train_and_save_sa_model(history_df, C, model_config):
     mu = ema_historical_return(history_df)
-    C = history_df.cov()
     
     N = len(history_df.columns)
     K = model_config.cardinality
@@ -54,6 +53,40 @@ def train_and_save_sa_model(history_df, model_config):
     return calculate_measures(history_df.columns, history_df, ws)
 
 
+def train_multi_sa_models(
+    history_df,
+    C,
+    model_config,
+    train_config,
+    save_dir,
+    save_path='sa_weights'
+):
+    output_columns = [
+        'stocks', 'weights',
+        'corr_min', 'corr_max', 'corr_mean', 'corr_std',
+        'return', 'sigma', 'sharpe', 'information', 'modigliani',
+    ]
+    
+    results = []
+            
+    for _ in tqdm(range(train_config.count)):
+        measures = train_and_save_sa_model(history_df, C, model_config)
+        weights = measures[0][np.where(measures[0] > 0)]
+        assets = history_df.columns[np.where(measures[0] > 0)]
+        results.append([assets, weights, *measures[1:]])
+    
+    results = np.asarray(results, dtype=object)
+    
+    df = pd.DataFrame({
+        output_columns[i]: results[:, i] for i in range(len(output_columns))
+    })
+    df = df_list_to_readable(df, ['stocks', 'weights'])
+    df.to_csv('{0}/{1}.csv'.format(save_dir, save_path), index=False)
+    df = readable_to_df_list(df, ['stocks', 'weights'])
+    
+    return df
+
+
 class SARunner:
     def __init__(self, config):
         self.save_dir = config.save_dir
@@ -61,33 +94,80 @@ class SARunner:
         self.model_config = config.model
         self.train_config = config.train
         self.test_config = config.test
-        self.output_columns = [
-            'stocks', 'weights',
-            'corr_min', 'corr_max', 'corr_mean', 'corr_std',
-            'return', 'sigma', 'sharpe', 'information', 'modigliani',
-        ]
     
     
     def test(self):
-        results = []
-        
-        for _ in tqdm(range(self.train_config.count)):
+        if self.test_config.test_method == 'future_performance':
             train_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.train_config)
-            measures = train_and_save_sa_model(train_dataset, self.model_config)
-            weights = measures[0][np.where(measures[0] > 0)]
-            assets = train_dataset.columns[np.where(measures[0] > 0)]
-            results.append([assets, weights, *measures[1:]])
+            
+            df = train_multi_sa_models(
+                train_dataset,
+                train_dataset.cov(),
+                self.model_config,
+                self.train_config,
+                self.save_dir
+            )
+            
+            test_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config)
+    
+            df_future_performance(test_dataset, df, self.output_columns, self.save_dir + '/future_performance.csv')
+            
+        if self.test_config.test_method == 'noise_performance':
+            train_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.train_config)
+            
+            cov_to_corr = train_dataset.cov().divide(train_dataset.corr())
+            corrs = train_dataset.corr().fillna(1)
+            noise = np.random.normal(0, self.test_config.noise_sigma, corrs.shape)
+            noised = corrs + noise
+            noised = noised.clip(lower=-1, upper=1)
+            np.fill_diagonal(noised.values, 1)
+            noised.to_csv(self.save_dir + '/noised_correlations.csv', index=False)
+            C = noised.multiply(cov_to_corr)
+            
+            df = train_multi_sa_models(
+                train_dataset,
+                C,
+                self.model_config,
+                self.train_config,
+                self.save_dir
+            )
+            
+            test_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config)
+            
+            df_future_performance(test_dataset, df, self.output_columns, self.save_dir + '/future_performance.csv')
+        if self.test_config.test_method == 'time_stability':
+            train_dataset1 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test1)
+            train_dataset2 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test2)
+            
+            df1 = train_multi_sa_models(
+                train_dataset1,
+                train_dataset1.cov(),
+                self.model_config,
+                self.train_config,
+                self.save_dir,
+                'sa_weights1'
+            )
+            
+            df2 = train_multi_sa_models(
+                train_dataset2,
+                train_dataset2.cov(),
+                self.model_config,
+                self.train_config,
+                self.save_dir,
+                'sa_weights2'
+            )
+            
+            df1 = df1.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            df2 = df2.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            
+            stability_df = pd.DataFrame(index=list(range(len(df1))), columns=list(range(len(df2))))
+            
+            for i in range(len(df1)):
+                for j in range(len(df2)):
+                    distance = calculate_noise_stability(
+                        set(df1.loc[i, 'stocks']),
+                        set(df2.loc[j, 'stocks'])
+                    )
+                    stability_df.loc[i, j] = distance
+            stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)
         
-        results = np.asarray(results, dtype=object)
-        
-        df = pd.DataFrame({
-            self.output_columns[i]: results[:, i] for i in range(len(self.output_columns))
-        })
-        df = df_list_to_readable(df, ['stocks', 'weights'])
-        df.to_csv('{0}/{1}.csv'.format(self.save_dir, 'sa_weights'), index=False)
-        
-        df = readable_to_df_list(df, ['stocks', 'weights'])
-        
-        test_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config)
-        
-        df_future_performance(test_dataset, df, self.output_columns, self.save_dir + '/future_performance.csv')
