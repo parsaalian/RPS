@@ -1,0 +1,22 @@
+---
+  runner: SplexRunner
+  exp_dir: exp/Splex
+  dataset:
+    name: sp500
+    loader_name: SP500_loader
+    data_path: data/SP500/SP_20180402_20200401.csv
+  model:
+    name: Splex
+    weight_method: HRP_weight
+    weight_limit: 0.2
+    s: 2
+  train:
+    start_date: '2019-04-01'
+    end_date: '2019-08-01'
+  test:
+    test_method: noise_stability
+    start_date: '2019-04-01'
+    end_date: '2019-08-01'
+    sort_column: sharpe
+    noise_sigma: 0.01
+    train_results: exp/Mantegna/Mantegna_sp500_2021-Sep-21-13-38-58/mantegna_results.csv
