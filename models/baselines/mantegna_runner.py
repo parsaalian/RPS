@@ -52,7 +52,7 @@ def train_and_save_mantegna_model(
     for i in tqdm(range(len(baskets))):
         try:
             assets = baskets[i]
-            weight_dict = dict(eval(model_config.weight_method)(history_df[assets]))
+            weight_dict = dict(eval(model_config.weight_method)(history_df[assets], model_config))
             # print(weight_dict)
             assets, weights = list(weight_dict.keys()), list(weight_dict.values())
             results.append([

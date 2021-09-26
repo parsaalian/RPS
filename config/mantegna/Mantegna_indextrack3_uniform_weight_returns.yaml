@@ -1,0 +1,14 @@
+dataset:
+  data_path: data/indextrack/indextrack3.txt
+  loader_name: indextrack_loader
+  name: indextrack3
+exp_dir: exp/Mantegna
+model:
+  model_config: return
+  name: Mantegna
+  weight_method: uniform_weight_returns
+runner: MantegnaRunner
+test: {}
+train:
+  end_date: 200
+  start_date: 0

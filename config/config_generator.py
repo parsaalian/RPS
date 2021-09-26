@@ -1,27 +1,20 @@
 import yaml
 
 base_dict = {
-    "test": {
-        "start_date": 201,
-        "end_date": 290,
-        "test_method": "future_performance"
-    },
+    "test": {},
     "train": {
         "start_date": 0,
         "end_date": 200,
     },
-    "runner": "RandomRunner",
-    "exp_dir": "exp/Random",
+    "runner": "MantegnaRunner",
+    "exp_dir": "exp/Mantegna",
     "model": {
-        "name": "Random",
+        "name": "Mantegna",
         "weight_method": "HRP_weight",
-        "port_mean": 10,
-        "port_std": 2,
-        "count": 10,
     },
     "dataset": {
-        "data_path": "data/indextrack/indextrack3.txt",
-        "name": "indextrack3",
+        "data_path": "data/indextrack/indextrack5.txt",
+        "name": "indextrack5",
         "loader_name": "indextrack_loader"
     }
 }
@@ -38,16 +31,16 @@ def create_RPS_configs():
             for model_config in list_MVO_model_configs:
                 base_dict['model']['model_config'] = model_config
 
-                file_name = "Random_indextrack3_{weight_method}_{model_config}.yaml".format(
+                file_name = "Mantegna_indextrack5_{weight_method}_{model_config}.yaml".format(
                     weight_method=weight_method, model_config=model_config)
 
-                with open('./random/' + file_name, 'w') as outfile:
+                with open('./mantegna/' + file_name, 'w') as outfile:
                     yaml.dump(base_dict, outfile, default_flow_style=False)
 
         else:
-            file_name = "Random_indextrack3_{weight_method}.yaml".format(
+            file_name = "Mantegna_indextrack5_{weight_method}.yaml".format(
                 weight_method=weight_method)
-            with open('./random/'+file_name, 'w') as outfile:
+            with open('./mantegna/'+file_name, 'w') as outfile:
                 yaml.dump(base_dict, outfile, default_flow_style=False)
 
             print(file_name)

@@ -1,0 +1,13 @@
+dataset:
+  data_path: data/SP500/SP_20180402_20200401.csv
+  loader_name: SP500_loader
+  name: sp500
+exp_dir: exp/Mantegna
+model:
+  name: Mantegna
+  weight_method: HRP_weight
+runner: MantegnaRunner
+test: {}
+train:
+  end_date: '2019-08-01'
+  start_date: '2019-04-01'
