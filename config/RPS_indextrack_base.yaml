@@ -1,7 +1,7 @@
 dataset:
-  data_path: data/indextrack/indextrack5.txt
+  data_path: data/indextrack/indextrack1.txt
   loader_name: indextrack_loader
-  name: indextrack5
+  name: indextrack1
 exp_dir: exp/RPS
 model:
   batch_words: 4

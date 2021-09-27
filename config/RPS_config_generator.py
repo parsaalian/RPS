@@ -3,9 +3,9 @@ import yaml
 base_dict = {
     "test": None,
     "train": {
-        "start_date": "2019-04-01",
-        "end_date": "2019-08-01",
-        "embedding_path": "exp/RPS/embeddings.npy"
+        "start_date": 0,
+        "end_date": 200,
+        "embedding_path": "exp/RPS/train/RPS_indextrack5_FCM_clustering_8_HRP_weight_2021-Sep-27-19-16-07/embeddings.npy"
     },
     "runner": "RPSRunner",
     "exp_dir": "exp/RPS",
@@ -28,17 +28,18 @@ base_dict = {
         "sort_measure": "sharpe"
     },
     "dataset": {
-        "data_path": "data/SP500/SP_20180402_20200401.csv",
-        "name": "sp500",
-        "loader_name": "SP500_loader"
+        "data_path": "data/indextrack/indextrack5.txt",
+        "name": "indextrack5",
+        "loader_name": "indextrack_loader"
     }
 }
 
 list_clustering_methods = ["FCM_clustering", "KMEANS_clustering"]
-list_n_clusters = [40, 50, 60]
+list_n_clusters = [15, 20, 25]
 # list_weight_methods = ["HRP_weight", 'MVO_weight', 'uniform_weight_returns']
-list_weight_methods = ["CLA_weights"]
+list_weight_methods = ["CLA_weight"]
 list_MVO_model_configs = ['volatility', 'sharpe', 'risk', 'return']
+list_CLA_model_configs = ['volatility', 'sharpe']
 
 
 def create_RPS_configs():
@@ -57,13 +58,24 @@ def create_RPS_configs():
                             clustering_method=clustering_method, n_cluster=n_cluster,
                             weight_method=weight_method, model_config=model_config)
 
-                        with open('./rps/sp500/' + file_name, 'w') as outfile:
+                        with open('./rps/' + file_name, 'w') as outfile:
+                            yaml.dump(base_dict, outfile, default_flow_style=False)
+                
+                elif weight_method == 'CLA_weight':
+                    for model_config in list_CLA_model_configs:
+                        base_dict['model']['model_config'] = model_config
+
+                        file_name = "RPS_indextrack5_{clustering_method}_{n_cluster}_{weight_method}_{model_config}.yaml".format(
+                            clustering_method=clustering_method, n_cluster=n_cluster,
+                            weight_method=weight_method, model_config=model_config)
+
+                        with open('./rps/' + file_name, 'w') as outfile:
                             yaml.dump(base_dict, outfile, default_flow_style=False)
 
                 else:
                     file_name = "RPS_{clustering_method}_{n_cluster}_{weight_method}.yaml".format(
                         clustering_method=clustering_method, n_cluster=n_cluster, weight_method=weight_method)
-                    with open('./rps/sp500/'+file_name, 'w') as outfile:
+                    with open('./rps/'+file_name, 'w') as outfile:
                         yaml.dump(base_dict, outfile, default_flow_style=False)
 
                     print(file_name)

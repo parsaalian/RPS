@@ -76,18 +76,17 @@ def train_and_save_node2vec_model(
         results = []
         
         for i in tqdm(range(len(baskets))):
-            # try:
             assets = baskets[i]
-            weight_dict = dict(eval(model_config.weight_method)(history_df[assets], model_config))
-            # print(weight_dict)1
-            assets, weights = list(weight_dict.keys()), list(weight_dict.values())
-            results.append([
-                assets,
-                weights,
-                *calculate_measures(assets, history_df, weights)
-            ])
-            # except Exception as e:
-            #     print(e)
+            if assets is not None and len(assets) > 1:
+                try:
+                    weight_dict = dict(eval(model_config.weight_method)(history_df[assets], model_config))
+                    assets, weights = list(weight_dict.keys()), list(weight_dict.values())
+                    results.append([
+                        assets,
+                        *calculate_measures(assets, history_df, weights)
+                    ])
+                except Exception as e:
+                    print(e)
         
         results = np.asarray(results, dtype=object)
         df = pd.DataFrame({
