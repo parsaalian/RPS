@@ -21,14 +21,14 @@ def main():
     pprint(config)
     print("<" * 80)
     
-    try:
-        runner = eval(config.runner)(config)
-        if not args.test:
-            runner.train()
-        else:
-            runner.test()
-    except:
-        logger.error(traceback.format_exc())
+    # try:
+    runner = eval(config.runner)(config)
+    if not args.test:
+        runner.train()
+    else:
+        runner.test()
+    # except:
+    #     logger.error(traceback.format_exc())
 
     sys.exit(0)
 

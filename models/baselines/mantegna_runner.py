@@ -50,17 +50,18 @@ def train_and_save_mantegna_model(
     results = []
     
     for i in tqdm(range(len(baskets))):
-        # try:
         assets = baskets[i]
-        weight_dict = dict(eval(model_config.weight_method)(history_df[assets], model_config))
-        # print(weight_dict)
-        assets, weights = list(weight_dict.keys()), list(weight_dict.values())
-        results.append([
-            assets,
-            *calculate_measures(assets, history_df, weights)
-        ])
-        # except Exception as e:
-        #     print(e)
+        if len(assets) > 1:
+            # try:
+            weight_dict = dict(eval(model_config.weight_method)(history_df[assets], model_config))
+            # print(weight_dict)
+            assets, weights = list(weight_dict.keys()), list(weight_dict.values())
+            results.append([
+                assets,
+                *calculate_measures(assets, history_df, weights)
+            ])
+            # except Exception as e:
+            #     print(e)
     
     results = np.asarray(results, dtype=object)
         
