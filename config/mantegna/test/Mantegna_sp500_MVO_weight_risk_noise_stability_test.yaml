@@ -1,0 +1,22 @@
+dataset:
+  data_path: data/SP500/SP_20180402_20200401.csv
+  loader_name: SP500_loader
+  name: sp500
+exp_dir: exp/Mantegna
+exp_name: Mantegna_sp500_MVO_weight_2021-Sep-26-17-21-07
+model:
+  model_config: risk
+  name: Mantegna
+  weight_method: MVO_weight
+run_id: '13298'
+runner: MantegnaRunner
+save_dir: exp/Mantegna/train/Mantegna_sp500_MVO_weight_2021-Sep-26-17-21-07
+test:
+  end_date: '2019-09-01'
+  noise_sigma: 0.01
+  sort_column: sharpe
+  start_date: '2019-08-02'
+  test_method: noise_stability
+train:
+  end_date: '2019-08-01'
+  start_date: '2019-04-01'

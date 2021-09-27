@@ -15,22 +15,24 @@ def edict2dict(edict_obj):
 
 def create_test_config(base_dir, save_dir, result_name, test_sets):
     for folder in os.listdir(base_dir):
-        config_path = os.path.join(base_dir, folder, 'future_performance', 'config.yaml')
+        config_path = os.path.join(base_dir, folder, 'config.yaml')
         print(config_path)
         config = edict(yaml.load(open(config_path, 'r')))
         tests = test_sets['indextrack'] if 'indextrack' in folder else test_sets['sp500']
+                
         for test in tests:
-            config.test = {
+            '''config.test = {
                 **test,
-                "train_results": os.path.join(base_dir.replace('../', ''), folder, 'future_performance', result_name)
-            }
+                "train_results": os.path.join(base_dir.replace('../', ''), folder, result_name)
+            }'''
+            config.test = test
             # print(config.model, '\n')
             yaml.dump(
                 edict2dict(config),
                 open(os.path.join(
                     save_dir, '_'.join(folder.split('_')[:-1]) + \
                         (('_' + config.model.model_config) if 'model_config' in config.model else '') + \
-                    '_test.yaml'
+                    '_' + config.test.test_method + '_test.yaml'
                 ), 'w+'),
                 default_flow_style=False
             )
@@ -90,11 +92,11 @@ indextrack_test_sets = [
 ]
 
 create_test_config(
-    '../exp/Random/train',
-    './random/test',
-    'random_results.csv',
+    '../exp/Mantegna/train',
+    './mantegna/test',
+    'mantegna_results.csv',
     {
-        'sp500': [sp500_test_sets[0]],
-        'indextrack': [indextrack_test_sets[0]]
+        'sp500': sp500_test_sets[1:],
+        'indextrack': indextrack_test_sets[1:]
     }
 )

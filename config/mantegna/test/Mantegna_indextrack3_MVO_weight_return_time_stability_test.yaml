@@ -1,0 +1,25 @@
+dataset:
+  data_path: data/indextrack/indextrack3.txt
+  loader_name: indextrack_loader
+  name: indextrack3
+exp_dir: exp/Mantegna
+exp_name: Mantegna_indextrack3_MVO_weight_2021-Sep-26-17-20-14
+model:
+  model_config: return
+  name: Mantegna
+  weight_method: MVO_weight
+run_id: '13145'
+runner: MantegnaRunner
+save_dir: exp/Mantegna/train/Mantegna_indextrack3_MVO_weight_2021-Sep-26-17-20-14
+test:
+  sort_column: sharpe
+  test1:
+    end_date: 20
+    start_date: 0
+  test2:
+    end_date: 40
+    start_date: 20
+  test_method: time_stability
+train:
+  end_date: 200
+  start_date: 0

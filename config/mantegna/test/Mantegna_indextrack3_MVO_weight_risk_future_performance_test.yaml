@@ -1,0 +1,21 @@
+dataset:
+  data_path: data/indextrack/indextrack3.txt
+  loader_name: indextrack_loader
+  name: indextrack3
+exp_dir: exp/Mantegna
+exp_name: Mantegna_indextrack3_MVO_weight_2021-Sep-26-17-20-16
+model:
+  model_config: risk
+  name: Mantegna
+  weight_method: MVO_weight
+run_id: '13156'
+runner: MantegnaRunner
+save_dir: exp/Mantegna/train/Mantegna_indextrack3_MVO_weight_2021-Sep-26-17-20-16
+test:
+  end_date: 290
+  start_date: 201
+  test_method: future_performance
+  train_results: exp/Mantegna/train/Mantegna_indextrack3_MVO_weight_2021-Sep-26-17-20-16/mantegna_results.csv
+train:
+  end_date: 200
+  start_date: 0
