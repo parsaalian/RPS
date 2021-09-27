@@ -17,7 +17,7 @@ def uniform_weight_returns(history_df, _):
 
 
 def HRP_weight(history_df, _):
-    returns = historical_returns(history_df)
+    returns = historical_returns(history_df).reset_index(drop=True)
     optimizer = HRPOpt(returns=returns).optimize()
     return optimizer
 

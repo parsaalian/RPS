@@ -30,19 +30,18 @@ def train_and_save_random_model(
         )
     ))
     for count in tqdm(port_counts):
-        assets = list(np.random.choice(list(set(history_df.columns)), count))
-        print(assets)
-        weight_dict = dict(eval(model_config.weight_method)(history_df[assets], model_config))
-        assets, weights = list(weight_dict.keys()), list(weight_dict.values())
-        try:
-            print('measures')
-            results.append([
-                assets,
-                weights,
-                *calculate_measures(assets, history_df, weights),
-            ])
-        except:
-            pass
+        assets = list(np.random.choice(list(set(history_df.columns)), count, replace=False))
+        if len(assets) > 1:
+            print(assets)
+            weight_dict = dict(eval(model_config.weight_method)(history_df[assets], model_config))
+            assets, weights = list(weight_dict.keys()), list(weight_dict.values())
+            try:
+                results.append([
+                    assets,
+                    *calculate_measures(assets, history_df, weights),
+                ])
+            except:
+                pass
 
     results = np.asarray(results)
     rand_df = pd.DataFrame({
