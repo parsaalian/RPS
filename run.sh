@@ -1,4 +1,4 @@
-for f in ./config/mantegna/*.yaml; do
+for f in ./config/random/test/*.yaml; do
     echo "$f"
-    python3 ./run.py -c "$f"
+    python3 ./run.py -c "$f" -t
 done

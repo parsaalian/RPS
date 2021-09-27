@@ -1,0 +1,24 @@
+dataset:
+  data_path: data/SP500/SP_20180402_20200401.csv
+  loader_name: SP500_loader
+  name: sp500
+exp_dir: exp/Random
+exp_name: Random_sp500_MVO_weight_2021-Sep-26-17-04-22
+model:
+  count: 10
+  model_config: sharpe
+  name: Random
+  port_mean: 30
+  port_std: 3
+  weight_method: MVO_weight
+run_id: '12210'
+runner: RandomRunner
+save_dir: exp/Random/test/Random_sp500_MVO_weight_2021-Sep-26-17-04-22/future_performance
+test:
+  end_date: '2019-09-01'
+  start_date: '2019-08-02'
+  test_method: future_performance
+  train_results: exp/Random/train/Random_sp500_MVO_weight_2021-Sep-26-17-04-22/future_performance/random_results.csv
+train:
+  end_date: '2019-08-01'
+  start_date: '2019-04-01'
