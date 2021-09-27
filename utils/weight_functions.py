@@ -1,3 +1,4 @@
+import numpy as np
 from pypfopt.cla import CLA
 from pypfopt.hierarchical_portfolio import HRPOpt
 from pypfopt.efficient_frontier import EfficientFrontier
@@ -5,7 +6,9 @@ from pypfopt.expected_returns import ema_historical_return
 
 
 def historical_returns(history_df):
-    return history_df.pct_change().cumsum().fillna(0)
+    returns = history_df.pct_change().cumsum().fillna(0)
+    returns = returns.replace([np.inf, -np.inf], np.nan).dropna()
+    return returns
 
 
 def uniform_weight_returns(history_df, _):
