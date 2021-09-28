@@ -69,6 +69,61 @@ class SplexSolver:
             self.maxi[i] = self.max
 
 
+def train_and_save_splex(
+    history_df,
+    correlation_matrix,
+    model_config,
+    save_dir
+):
+    output_columns = [
+        'stocks', 'weights',
+        'corr_min', 'corr_max', 'corr_mean', 'corr_std',
+        'return', 'sigma', 'sharpe', 'information', 'modigliani',
+    ]
+    
+    asset_performances = history_df.tail(1).reset_index(drop=True) / history_df.head(1).reset_index(drop=True) - 1
+    
+    G = nx.Graph()
+        
+    for asset in asset_performances.columns:
+        G.add_node(asset, weight=asset_performances.loc[0, asset])
+    
+    for i in correlation_matrix.index:
+        for j in correlation_matrix.columns:
+            i_j_corr = correlation_matrix.loc[i, j]
+            if i_j_corr < model_config.weight_limit:
+                G.add_edge(i, j, weight=i_j_corr)
+    
+    solver = SplexSolver(G, model_config.s)
+    solver.solve()
+    
+    baskets = [list(solver.res)]
+    
+    results = []
+    
+    for i in tqdm(range(len(baskets))):
+        try:
+            assets = baskets[i]
+            weight_dict = dict(eval(model_config.weight_method)(history_df[assets], model_config))
+            # print(weight_dict)1
+            assets, weights = list(weight_dict.keys()), list(weight_dict.values())
+            results.append([
+                assets,
+                *calculate_measures(assets, history_df, weights)
+            ])
+        except Exception as e:
+            print(e)
+    
+    results = np.asarray(results, dtype=object)
+    df = pd.DataFrame({
+        output_columns[i]: results[:, i] for i in range(len(output_columns))
+    })
+    df = df_list_to_readable(df, ['stocks', 'weights'])
+    df.to_csv('{0}/{1}.csv'.format(save_dir, 'splex_results'), index=False)
+    
+    return df
+
+
 class SplexRunner:
     def __init__(self, config):
         self.save_dir = config.save_dir
@@ -86,48 +141,87 @@ class SplexRunner:
     def train(self):
         train_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.train_config)
         
-        corrs = train_dataset.corr().fillna(1)
-        
-        asset_performances = train_dataset.tail(1).reset_index(drop=True) / train_dataset.head(1).reset_index(drop=True) - 1
-        
-        G = nx.Graph()
-        
-        for asset in asset_performances.columns:
-            G.add_node(asset, weight=asset_performances.loc[0, asset])
-        
-        for i in corrs.index:
-            for j in corrs.columns:
-                i_j_corr = corrs.loc[i, j]
-                if i_j_corr < self.model_config.weight_limit:
-                    G.add_edge(i, j, weight=i_j_corr)
-        
-        solver = SplexSolver(G, self.model_config.s)
-        solver.solve()
-        
-        baskets = [list(solver.res)]
-        
-        results = []
-        
-        for i in tqdm(range(len(baskets))):
-            try:
-                assets = baskets[i]
-                weight_dict = dict(eval(self.model_config.weight_method)(train_dataset[assets], self.model_config))
-                # print(weight_dict)1
-                assets, weights = list(weight_dict.keys()), list(weight_dict.values())
-                results.append([
-                    assets,
-                    *calculate_measures(assets, train_dataset, weights)
-                ])
-            except Exception as e:
-                print(e)
-        
-        results = np.asarray(results, dtype=object)
-        df = pd.DataFrame({
-            self.output_columns[i]: results[:, i] for i in range(len(self.output_columns))
-        })
-        df = df_list_to_readable(df, ['stocks', 'weights'])
-        df.to_csv('{0}/{1}.csv'.format(self.save_dir, 'splex_results'), index=False)
+        train_and_save_splex(
+            train_dataset,
+            train_dataset.corr().fillna(1),
+            self.model_config,
+            self.save_dir,
+        )
     
     
     def test(self):
-        pass
+        if self.test_config.test_method == 'future_performance':
+            test_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config)
+        
+            weights_df = readable_to_df_list(pd.read_csv(self.test_config.train_results), ['stocks', 'weights'])
+            
+            df_future_performance(
+                test_dataset,
+                weights_df,
+                self.output_columns,
+                self.save_dir + '/future_performances.csv'
+            )
+        elif self.test_config.test_method == 'noise_stability':
+            train_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.train_config)
+            
+            corrs = train_dataset.corr().fillna(1)
+            noise = np.random.normal(0, self.test_config.noise_sigma, corrs.shape)
+            noised = corrs + noise
+            noised = noised.clip(lower=-1, upper=1)
+            np.fill_diagonal(noised.values, 1)
+            noised.to_csv(self.save_dir + '/noised_correlations.csv', index=False)
+            
+            df = train_and_save_splex(
+                train_dataset,
+                noised,
+                self.model_config,
+                self.save_dir,
+            )
+            
+            df = df.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            
+            pre_df = readable_to_df_list(pd.read_csv(self.test_config.train_results), ['stocks', 'weights'])
+            pre_df = pre_df.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            
+            stability_df = pd.DataFrame(index=list(range(len(df))), columns=list(range(len(pre_df))))
+            
+            for i in range(len(df)):
+                for j in range(len(pre_df)):
+                    distance = calculate_noise_stability(
+                        set(df.loc[i, 'stocks']),
+                        set(pre_df.loc[j, 'stocks'])
+                    )
+                    stability_df.loc[i, j] = distance
+            
+            stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)
+        else:
+            train_dataset1 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test1)            
+            train_dataset2 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test2)
+            
+            df1 = train_and_save_splex(
+                train_dataset1,
+                train_dataset1.corr().fillna(1),
+                self.model_config,
+                self.save_dir,
+            )
+            
+            df2 = train_and_save_splex(
+                train_dataset2,
+                train_dataset2.corr().fillna(1),
+                self.model_config,
+                self.save_dir,
+            )
+            
+            df1 = df1.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            df2 = df2.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            
+            stability_df = pd.DataFrame(index=list(range(len(df1))), columns=list(range(len(df2))))
+            
+            for i in range(len(df1)):
+                for j in range(len(df2)):
+                    distance = calculate_noise_stability(
+                        set(df1.loc[i, 'stocks']),
+                        set(df2.loc[j, 'stocks'])
+                    )
+                    stability_df.loc[i, j] = distance
+            stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)

@@ -95,7 +95,7 @@ def train_and_save_node2vec_model(
         df = df_list_to_readable(df, ['stocks', 'weights'])
         df.to_csv('{0}/{1}.csv'.format(save_dir, save_paths['results']), index=False)
     
-    return df
+    return readable_to_df_list(df, ['stocks', 'weights'])
 
 class RPSRunner:
     def __init__(self, config):
@@ -130,21 +130,12 @@ class RPSRunner:
         
             weights_df = readable_to_df_list(pd.read_csv(self.test_config.train_results), ['stocks', 'weights'])
             
-            future_performances = []
-            
-            for _, row in weights_df.iterrows():
-                future_performances.append([
-                    row.stocks,
-                    *calculate_measures(row.stocks, test_dataset, row.weights)
-                ])
-            
-            future_performances = np.asarray(future_performances, dtype=object)
-                    
-            df = pd.DataFrame({
-                self.output_columns[i]: future_performances[:, i] for i in range(len(self.output_columns))
-            })
-            df = df_list_to_readable(df, ['stocks', 'weights'])
-            df.to_csv(self.save_dir + '/future_performances.csv', index=False)
+            df_future_performance(
+                test_dataset,
+                weights_df,
+                self.output_columns,
+                self.save_dir + '/future_performances.csv'
+            )
 
         elif self.test_config.test_method == 'noise_stability':            
             train_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.train_config)

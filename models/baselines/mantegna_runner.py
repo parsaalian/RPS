@@ -71,7 +71,7 @@ def train_and_save_mantegna_model(
     df = df_list_to_readable(df, ['stocks', 'weights'])
     df.to_csv('{0}/{1}.csv'.format(save_dir, save_path), index=False)
     
-    return df
+    return readable_to_df_list(df, ['stocks', 'weights'])
 
 
 class MantegnaRunner:

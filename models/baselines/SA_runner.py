@@ -84,7 +84,7 @@ def train_multi_sa_models(
     df.to_csv('{0}/{1}.csv'.format(save_dir, save_path), index=False)
     df = readable_to_df_list(df, ['stocks', 'weights'])
     
-    return df
+    return readable_to_df_list(df, ['stocks', 'weights'])
 
 
 class SARunner:

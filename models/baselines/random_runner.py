@@ -53,7 +53,7 @@ def train_and_save_random_model(
     rand_df = df_list_to_readable(rand_df, ['stocks', 'weights'])
     rand_df.to_csv('{0}/{1}.csv'.format(save_dir, save_path), index=False)
     
-    return rand_df
+    return readable_to_df_list(rand_df, ['stocks', 'weights'])
 
 class RandomRunner:
     def __init__(self, config):

@@ -19,7 +19,6 @@ def df_future_performance(
     for _, row in weights_df.iterrows():
         future_performances.append([
             row.stocks,
-            row.weights,
             *calculate_measures(row.stocks, history_df, row.weights)
         ])
     
