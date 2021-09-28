@@ -21,11 +21,11 @@ def create_test_config(base_dir, save_dir, result_name, test_sets):
         tests = test_sets['indextrack'] if 'indextrack' in folder else test_sets['sp500']
                 
         for test in tests:
-            config.test = {
+            '''config.test = {
                 **test,
                 "train_results": os.path.join(base_dir.replace('../', ''), folder, result_name)
-            }
-            # config.test = test
+            }'''
+            config.test = test
             # print(config.model, '\n')
             yaml.dump(
                 edict2dict(config),
@@ -92,11 +92,11 @@ indextrack_test_sets = [
 ]
 
 create_test_config(
-    '../exp/Mantegna/train',
-    './mantegna/test',
-    'mantegna_results.csv',
+    '../exp/Splex/train',
+    './splex/test',
+    'splex_results.csv',
     {
-        'sp500': sp500_test_sets[:2], # [sp500_test_sets[0]], # 
-        'indextrack': indextrack_test_sets[:2], # [indextrack_test_sets[0]] # 
+        'sp500': [sp500_test_sets[2]], # [sp500_test_sets[0]], # 
+        'indextrack': [indextrack_test_sets[2]], # [indextrack_test_sets[0]] # 
     }
 )

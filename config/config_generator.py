@@ -6,24 +6,22 @@ base_dict = {
         "start_date": 0,
         "end_date": 200,
     },
-    "runner": "RandomRunner",
-    "exp_dir": "exp/Random",
+    "runner": "SplexRunner",
+    "exp_dir": "exp/Splex",
     "model": {
-        "name": "Random",
+        "name": "Splex",
         "weight_method": "HRP_weight",
-        "count": 10,
-        "port_mean": 5,
-        "port_std": 1,
+        "weight_limit": 0.2,
+        "s": 2,
     },
     "dataset": {
-        "data_path": "data/indextrack/indextrack1.txt",
-        "name": "indextrack1",
-        "loader_name": "indextrack_loader"
+        "data_path": "data/SP500/SP_20180402_20200401.csv",
+        "name": "sp500",
+        "loader_name": "SP500_loader"
     }
 }
 
-# list_weight_methods = ["HRP_weight", 'MVO_weight', 'uniform_weight_returns']
-list_weight_methods = ["CLA_weight"]
+list_weight_methods = ["HRP_weight", "CLA_weight", 'MVO_weight', 'uniform_weight_returns']
 list_MVO_model_configs = ['volatility', 'sharpe', 'risk', 'return']
 list_CLA_model_configs = ['volatility', 'sharpe']
 
@@ -36,29 +34,27 @@ def create_RPS_configs():
             for model_config in list_MVO_model_configs:
                 base_dict['model']['model_config'] = model_config
 
-                file_name = "Random_indextrack1_{weight_method}_{model_config}.yaml".format(
+                file_name = "Splex_sp500_{weight_method}_{model_config}.yaml".format(
                     weight_method=weight_method, model_config=model_config)
 
-                with open('./random/' + file_name, 'w') as outfile:
+                with open('./splex/' + file_name, 'w') as outfile:
                     yaml.dump(base_dict, outfile, default_flow_style=False)
         
         elif weight_method == 'CLA_weight':
             for model_config in list_CLA_model_configs:
                 base_dict['model']['model_config'] = model_config
 
-                file_name = "Random_indextrack1_{weight_method}_{model_config}.yaml".format(
+                file_name = "Splex_sp500_{weight_method}_{model_config}.yaml".format(
                     weight_method=weight_method, model_config=model_config)
 
-                with open('./random/' + file_name, 'w') as outfile:
+                with open('./splex/' + file_name, 'w') as outfile:
                     yaml.dump(base_dict, outfile, default_flow_style=False)
 
         else:
-            file_name = "Random_indextrack1_{weight_method}.yaml".format(
+            file_name = "Splex_sp500_{weight_method}.yaml".format(
                 weight_method=weight_method)
-            with open('./random/'+file_name, 'w') as outfile:
+            with open('./splex/'+file_name, 'w') as outfile:
                 yaml.dump(base_dict, outfile, default_flow_style=False)
-
-            print(file_name)
 
 
 create_RPS_configs()
