@@ -151,40 +151,30 @@ class MantegnaRunner:
             
             stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)
         elif self.test_config.test_method == 'time_stability':
-            train_dataset1 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test1)
-            corrs1 = train_dataset1.corr().fillna(1)
-            d1 = corrs1.apply(lambda x: np.sqrt(2 * (1 - x)))
+            pre_df = readable_to_df_list(pd.read_csv(self.test_config.train_results), ['stocks', 'weights'])
             
-            train_dataset2 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test2)
-            corrs2 = train_dataset1.corr().fillna(1)
-            d2 = corrs2.apply(lambda x: np.sqrt(2 * (1 - x)))
+            train_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config)
+            corrs = train_dataset.corr().fillna(1)
+            d = corrs.apply(lambda x: np.sqrt(2 * (1 - x)))
             
-            df1 = train_and_save_mantegna_model(
-                train_dataset1,
-                d1,
+            df = train_and_save_mantegna_model(
+                train_dataset,
+                d,
                 self.model_config,
                 self.save_dir,
-                save_path='mantegna_results1'
+                save_path='mantegna_results'
             )
             
-            df2 = train_and_save_mantegna_model(
-                train_dataset2,
-                d2,
-                self.model_config,
-                self.save_dir,
-                save_path='mantegna_results2'
-            )
+            pre_df = pre_df.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            df = df.sort_values(self.test_config.sort_column).reset_index(drop=True)
             
-            df1 = df1.sort_values(self.test_config.sort_column).reset_index(drop=True)
-            df2 = df2.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            stability_df = pd.DataFrame(index=list(range(len(pre_df))), columns=list(range(len(df))))
             
-            stability_df = pd.DataFrame(index=list(range(len(df1))), columns=list(range(len(df2))))
-            
-            for i in range(len(df1)):
-                for j in range(len(df2)):
+            for i in range(len(pre_df)):
+                for j in range(len(df)):
                     distance = calculate_noise_stability(
-                        set(df1.loc[i, 'stocks']),
-                        set(df2.loc[j, 'stocks'])
+                        set(pre_df.loc[i, 'stocks']),
+                        set(df.loc[j, 'stocks'])
                     )
                     stability_df.loc[i, j] = distance
             stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)

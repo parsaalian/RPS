@@ -151,39 +151,4 @@ class SARunner:
                     stability_df.loc[i, j] = distance
             
             stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)
-        elif self.test_config.test_method == 'time_stability':
-            train_dataset1 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test1)
-            train_dataset2 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test2)
-            
-            df1 = train_multi_sa_models(
-                train_dataset1,
-                train_dataset1.cov(),
-                self.model_config,
-                self.train_config,
-                self.save_dir,
-                'sa_weights1'
-            )
-            
-            df2 = train_multi_sa_models(
-                train_dataset2,
-                train_dataset2.cov(),
-                self.model_config,
-                self.train_config,
-                self.save_dir,
-                'sa_weights2'
-            )
-            
-            df1 = df1.sort_values(self.test_config.sort_column).reset_index(drop=True)
-            df2 = df2.sort_values(self.test_config.sort_column).reset_index(drop=True)
-            
-            stability_df = pd.DataFrame(index=list(range(len(df1))), columns=list(range(len(df2))))
-            
-            for i in range(len(df1)):
-                for j in range(len(df2)):
-                    distance = calculate_noise_stability(
-                        set(df1.loc[i, 'stocks']),
-                        set(df2.loc[j, 'stocks'])
-                    )
-                    stability_df.loc[i, j] = distance
-            stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)
         

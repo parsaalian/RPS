@@ -195,33 +195,27 @@ class SplexRunner:
             
             stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)
         else:
-            train_dataset1 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test1)            
-            train_dataset2 = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config.test2)
+            pre_df = readable_to_df_list(pd.read_csv(self.test_config.train_results), ['stocks', 'weights'])
             
-            df1 = train_and_save_splex(
-                train_dataset1,
-                train_dataset1.corr().fillna(1),
+            train_dataset = eval(self.dataset_config.loader_name)(self.dataset_config, self.test_config)
+            
+            df = train_and_save_splex(
+                train_dataset,
+                train_dataset.corr().fillna(1),
                 self.model_config,
                 self.save_dir,
             )
             
-            df2 = train_and_save_splex(
-                train_dataset2,
-                train_dataset2.corr().fillna(1),
-                self.model_config,
-                self.save_dir,
-            )
+            pre_df = pre_df.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            df = df.sort_values(self.test_config.sort_column).reset_index(drop=True)
             
-            df1 = df1.sort_values(self.test_config.sort_column).reset_index(drop=True)
-            df2 = df2.sort_values(self.test_config.sort_column).reset_index(drop=True)
+            stability_df = pd.DataFrame(index=list(range(len(pre_df))), columns=list(range(len(df))))
             
-            stability_df = pd.DataFrame(index=list(range(len(df1))), columns=list(range(len(df2))))
-            
-            for i in range(len(df1)):
-                for j in range(len(df2)):
+            for i in range(len(pre_df)):
+                for j in range(len(df)):
                     distance = calculate_noise_stability(
-                        set(df1.loc[i, 'stocks']),
-                        set(df2.loc[j, 'stocks'])
+                        set(pre_df.loc[i, 'stocks']),
+                        set(df.loc[j, 'stocks'])
                     )
                     stability_df.loc[i, j] = distance
             stability_df.to_csv(self.save_dir + '/stability_matrix.csv', index=False)

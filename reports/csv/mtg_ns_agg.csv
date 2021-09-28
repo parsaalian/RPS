@@ -1,0 +1,13 @@
+min,max,ptmean,config
+0.2727272727272727,1.0,0.6808982683982684,Mantegna_indextrack2_CLA_weight_volatility
+0.25,1.0,0.5827614052614053,Mantegna_indextrack2_CLA_weight_sharpe
+0.4,0.8,0.5060606060606061,Mantegna_indextrack1_CLA_weight_sharpe
+0.1818181818181818,0.8,0.43359665026331695,Mantegna_indextrack3_CLA_weight_sharpe
+0.2105263157894736,1.0,0.4792773643275599,Mantegna_indextrack5_CLA_weight_sharpe
+0.375,1.0,0.6361111111111111,Mantegna_indextrack1_CLA_weight_volatility
+0.2666666666666666,1.0,0.5272054004196861,Mantegna_indextrack4_CLA_weight_sharpe
+0.1764705882352941,1.0,0.5287114845938375,Mantegna_indextrack4_CLA_weight_volatility
+0.3333333333333333,1.0,0.6182507550928604,Mantegna_indextrack3_CLA_weight_volatility
+0.1428571428571428,0.9,0.39429735443851793,Mantegna_sp500_CLA_weight_volatility
+0.0,1.0,0.42715926955634914,Mantegna_sp500_CLA_weight_sharpe
+0.1818181818181818,0.75,0.45625127675714905,Mantegna_indextrack5_CLA_weight_volatility

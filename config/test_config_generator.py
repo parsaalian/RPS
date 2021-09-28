@@ -21,12 +21,10 @@ def create_test_config(base_dir, save_dir, result_name, test_sets):
         tests = test_sets['indextrack'] if 'indextrack' in folder else test_sets['sp500']
         
         for test in tests:
-            '''config.test = {
+            config.test = {
                 **test,
                 "train_results": os.path.join(base_dir.replace('../', ''), folder, result_name)
-            }'''
-            config.test = test
-            # print(config.model, '\n')
+            }
             yaml.dump(
                 edict2dict(config),
                 open(os.path.join(
@@ -53,16 +51,9 @@ sp500_test_sets = [
     {
         "test_method": "time_stability",
         "sort_column": "sharpe",
-        "test1": {
-            "start_date": '2019-04-01',
-            "end_date": '2019-04-08',
-            "embedding_path": "exp/RPS/embeddings/RPS_sp500_FCM_clustering_40_CLA_weight_2021-Sep-28-11-36-24/config.yaml"
-        },
-        "test2": {
-            "start_date": '2019-04-09',
-            "end_date": '2019-08-16',
-            "embedding_path": "exp/RPS/embeddings/RPS_sp500_FCM_clustering_40_CLA_weight_2021-Sep-28-11-42-09/embeddings.npy"
-        }
+        "start_date": '2019-04-20',
+        "end_date": '2019-08-20',
+        # "embedding_path": "exp/RPS/embeddings/RPS_sp500_FCM_clustering_40_CLA_weight_2021-Sep-28-11-36-24/config.yaml"
     }
 ]
 
@@ -82,22 +73,15 @@ indextrack_test_sets = [
     {
         "test_method": "time_stability",
         "sort_column": "sharpe",
-        "test1": {
-            "start_date": 0,
-            "end_date": 20,
-            "embedding_path": "exp/RPS/embeddings/RPS_indextrack5_FCM_clustering_15_CLA_weight_2021-Sep-28-11-33-52/embeddings.npy"
-        },
-        "test2": {
-            "start_date": 20,
-            "end_date": 40,
-            "embedding_path": "exp/RPS/embeddings/RPS_indextrack5_FCM_clustering_15_CLA_weight_2021-Sep-28-11-35-08/embeddings.npy"
-        }
+        "start_date": 20,
+        "end_date": 220,
+        # "embedding_path": "exp/RPS/embeddings/RPS_indextrack5_FCM_clustering_15_CLA_weight_2021-Sep-28-11-33-52/embeddings.npy"
     }
 ]
 
 create_test_config(
     '../exp/RPS/train',
-    './rps',
+    './rps/',
     'results.csv',
     {
         'sp500': [sp500_test_sets[2]], # [sp500_test_sets[0]], # 
